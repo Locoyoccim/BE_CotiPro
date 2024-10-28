@@ -21,7 +21,7 @@ class Cotizaciones(models.Model):
         db_table = 'cotizaciones'
 
 
-class Detallecotizaciones(models.Model):
+class DetalleCotizaciones(models.Model):
     id_detalle = models.AutoField(primary_key=True)
     id_coti = models.IntegerField()
     id_producto = models.ForeignKey('Productos', models.DO_NOTHING, db_column='id_producto')
@@ -34,6 +34,18 @@ class Detallecotizaciones(models.Model):
     class Meta:
         managed = False
         db_table = 'detallecotizaciones'
+
+    def detalle_dict(self):
+        return{
+            'id_detalle': self.id_detalle,
+            'id_coti': self.id_coti,
+            'id_producto': self.id_producto,
+            'descripcion': self.descripcion,
+            'unidad_medida': self.unidad_medida,
+            'cantidad': self.cantidad,
+            'precio_unitario': self.precio_unitario,
+            'total': self.total
+        }
 
 
 class DjangoMigrations(models.Model):
