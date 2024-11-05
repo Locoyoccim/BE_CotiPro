@@ -16,6 +16,13 @@ class Cotizaciones(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=50)
 
+    cliente = models.CharField(max_length=100)
+    contacto = models.CharField(max_length=100)
+    telefono = models.CharField(max_length=20)
+    domicilio = models.CharField(max_length=255)
+    sub_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    comentarios = models.TextField(blank=True, null=True)  # Nuevo campo opcional
+
     class Meta:
         managed = False
         db_table = 'cotizaciones'

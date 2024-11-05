@@ -23,11 +23,11 @@ def usuario(request, pk):
         return delete_usuario(request, pk)
 
 @csrf_exempt
-def lista_productos(request):
+def lista_productos(request, pk):
     if request.method == 'GET':
-        return Obtener_Productos(request)
+        return Obtener_Productos(request, pk)
     elif request.method == 'POST':
-        return Crear_producto(request)
+        return Crear_producto(request, pk)
     elif request.method == 'DELETE':
         return Eliminar_producto(request)
     elif request.method == 'PUT':
@@ -52,13 +52,13 @@ def lista_cotizaciones(request, pk):
     if request.method == 'PUT':
         return actualizar_cotizacion(request, pk)
     if request.method == 'DELETE':
-        return eliminar_cotizacion(request)
+        return eliminar_cotizacion(request, pk)
     else:  
         return HttpResponse("Metodo Invalido", status=405)
      
-def detalle_cotizaciones(request):
+def detalle_cotizaciones(request, CotiId):
     if request.method == 'GET':
-        detalles = list(DetalleCotizaciones.objects.all().values())
+        detalles = list(DetalleCotizaciones.objects.filter(id_coti=CotiId).values())
 
         return JsonResponse(detalles, safe=False)
 
@@ -104,7 +104,18 @@ def actualizar_usuario(request, PK):
     usuario.rol = data["rol"]
     usuario.save()
 
-    return JsonResponse('Actualizacion completa', status=200, safe=False) 
+    response={ 
+        'message': 'Usuario actualizado con éxito',
+        'usuario': {
+            'id': usuario.id,
+            'empresa': usuario.empresa,
+            'nombre': usuario.nombre,
+            'email': usuario.email,
+            'rol': usuario.rol,
+            }
+    }
+
+    return JsonResponse(response, status=200, safe=False) 
 
 def get_usuario(request, pk):
     usuario = get_object_or_404(Usuarios, id=pk).usuario_dict()
@@ -116,15 +127,15 @@ def delete_usuario(request, pk):
     name_user = usuario.nombre
     usuario.delete()
 
-    return JsonResponse(f'{name_user} eliminado con exito', safe=False, status=200)
+    return JsonResponse(f'usuario {name_user} eliminado con exito', safe=False, status=200)
 
 # FUNCIONES PARA PRODUCTOS
-def Obtener_Productos(request):
-    productos = list(Productos.objects.all().values())
+def Obtener_Productos(request, pk):
+    productos = list(Productos.objects.filter(id_user_id=pk).values())
 
     return JsonResponse(productos, safe=False)
 
-def Crear_producto(request):
+def Crear_producto(request, pk):
     data = json.loads(request.body)
 
      # Validar que todos los campos requeridos están presentes
@@ -171,7 +182,8 @@ def Crear_producto(request):
             'costo': producto.costo,
             'precio': producto.precio,
             'stock_sugerido': data['stock_sugerido'],
-            'stock_actual': data['stock_actual']
+            'stock_actual': data['stock_actual'],
+            'fecha_actualizacion': data['fecha_actualizacion']
         }
     }
 
@@ -190,7 +202,7 @@ def Actualizar_producto(request):
     data = json.loads(request.body)
 
     if "pk_producto" not in data:
-        return JsonResponse('Producto eliminado o no encontrado', status=400)
+        return JsonResponse('Producto eliminado o no encontrado', status=400, safe=False)
 
     producto = get_object_or_404(Productos, pk_producto=data["pk_producto"]);
     updated_inventario = get_object_or_404(Inventario, id_producto=data["pk_producto"])
@@ -213,11 +225,27 @@ def Actualizar_producto(request):
     producto.precio = data["precio"]
     producto.save()
 
-    return JsonResponse({'message': 'Producto actualizado con éxito'}, status=200)
+    response = {
+        "message": 'Producto actualizado con éxito',
+        "data": {
+            'pk_producto': producto.pk_producto,   
+            'nombre': producto.nombre,
+            'tipo_producto': producto.tipo_producto,
+            'unidad_medida': producto.unidad_medida,
+            'descripcion': producto.descripcion,
+            'costo': producto.costo,
+            'precio': producto.precio,
+            'stock_actual': updated_inventario.stock_actual,
+            'stock_sugerido': updated_inventario.stock_sugerido,
+            'fecha_actualizacion': updated_inventario.fecha_actualizacion,
+        }
+    }
+    return JsonResponse(response, status=200, safe=False)
 
 # FUNCIONES PARA INVENTARIO
 def Obtener_inventario(request, UserPk):
     data = Inventario.objects.filter(id_user_id=UserPk).select_related('id_producto').values(
+        'id_inventario',
         'id_producto_id',
         'fecha_actualizacion',
         'stock_actual',
@@ -235,6 +263,7 @@ def Obtener_inventario(request, UserPk):
             'fecha_actualizacion': item['fecha_actualizacion'],
             'stock_actual': item['stock_actual'],
             'stock_sugerido': item['stock_sugerido'],
+            'id_inventario': item['id_inventario']
         })
 
     return JsonResponse(response, safe=False)
@@ -250,6 +279,11 @@ def get_cotizaciones(request, pk):
             'id_detalle': item.id_coti,
             'usuario': name_user.nombre,
             'fecha_elaboracion': item.fecha_elaboracion,
+            'cliente': item.cliente,
+            'contacto': item.contacto,
+            'telefono': item.telefono,
+            'domicilio': item.domicilio,
+            'sub_total': item.sub_total,
             'iva': item.iva,
             'total': item.total,
             'status': item.status
@@ -261,23 +295,46 @@ def nueva_cotizacion(request, pk):
     data = json.loads(request.body)
     user = get_object_or_404(Usuarios, id=pk)
 
-    requirements = ['id_user', 'fecha_elaboracion', 'iva', 'total', 'status' ]
+    requirements = [ 'fecha_elaboracion', 'iva', 'total', 'status' ]
     for item in requirements:
         if item not in data['cotizacion']:
-            return JsonResponse(f'El dato *{item}* es requerido en la solicitud')
+            return JsonResponse(f'El dato *{item}* es requerido en la solicitud', safe=False)
 
+    response_full = {
+        "cotizacion": {},
+        "detalles": []
+        }
+    
     nueva_cotizacion = Cotizaciones.objects.create(
         id_user = user,
         fecha_elaboracion = data['cotizacion']['fecha_elaboracion'],
+        status = data["cotizacion"]["status"],
+        cliente = data["cotizacion"]["cliente"],
+        contacto = data["cotizacion"]["contacto"],
+        telefono = data["cotizacion"]["telefono"],
+        domicilio = data["cotizacion"]["domicilio"],
         iva = data['cotizacion']['iva'],
         total = data['cotizacion']['total'],
-        status = data['cotizacion']['status']
+        comentarios = data['cotizacion']['comentarios']
     )
     nueva_cotizacion.save()
+    response_full['cotizacion']={
+        'id_detalle': nueva_cotizacion.id_coti,
+        'usuario': user.nombre,
+        'fecha_elaboracion': nueva_cotizacion.fecha_elaboracion,
+        'cliente': nueva_cotizacion.cliente,
+        'contacto': nueva_cotizacion.contacto, 
+        'telefono': nueva_cotizacion.telefono,
+        'domicilio': nueva_cotizacion.domicilio,
+        'sub_total': nueva_cotizacion.sub_total,
+        'iva': nueva_cotizacion.iva,
+        'total': nueva_cotizacion.total,
+        'status': nueva_cotizacion.status
+    }
 
     for item in data['detalles']:
-        producto = Productos.objects.get(pk_producto=item['id_producto'])
-        nueva_detalle = DetalleCotizaciones.objects.create(
+        producto = get_object_or_404(Productos, pk_producto=item['id_producto'])
+        nuevo_detalle = DetalleCotizaciones.objects.create(
             id_coti = nueva_cotizacion.id_coti,
             id_producto = producto,
             descripcion = producto.descripcion,
@@ -286,11 +343,22 @@ def nueva_cotizacion(request, pk):
             precio_unitario = item['precio_unitario'],
             total = item['cantidad'] * item['precio_unitario']
         )
-        nueva_detalle.save()
+        nuevo_detalle.save()
+        response_full['detalles'].append({
+            'id_detalle': nuevo_detalle.id_detalle,
+            'id_coti': nuevo_detalle.id_coti,
+            'producto': producto.nombre,
+            'descripcion': nuevo_detalle.descripcion,
+            'unidad_medida': nuevo_detalle.unidad_medida,
+            'cantidad': nuevo_detalle.cantidad,
+            'precio_unitario': nuevo_detalle.precio_unitario,
+            'total': nuevo_detalle.total
+        })
 
-    return JsonResponse('Creado con éxito', safe=False, status=201)
 
-def eliminar_cotizacion(request):
+    return JsonResponse(response_full, safe=False, status=201)
+
+def eliminar_cotizacion(request, pk):
     data = json.loads(request.body)
 
     cotizacion = get_object_or_404(Cotizaciones, id_coti=data['id_coti'])
@@ -299,5 +367,41 @@ def eliminar_cotizacion(request):
     cotizacion.delete()
     detalle.delete()
   
+    return JsonResponse('eliminado completo', safe=False)
 
-    return JsonResponse('eliminado con completo', safe=False)
+def actualizar_cotizacion(request, pk):
+    data = json.loads(request.body)
+    nueva_cotizacion = Cotizaciones.objects.get(id_coti=data['cotizacion']['id_coti'])
+
+    nueva_cotizacion.fecha_elaboracion = data['cotizacion']['fecha_elaboracion']
+    nueva_cotizacion.cliente = data['cotizacion']['cliente']
+    nueva_cotizacion.contacto = data['cotizacion']['contacto']
+    nueva_cotizacion.telefono = data['cotizacion']['telefono']
+    nueva_cotizacion.domicilio = data['cotizacion']['domicilio']
+    nueva_cotizacion.sub_total = data['cotizacion']['sub_total']
+    nueva_cotizacion.iva = data['cotizacion']['iva']
+    nueva_cotizacion.total = data['cotizacion']['total']
+    nueva_cotizacion.status = data['cotizacion']['status']
+    nueva_cotizacion.save()
+
+     # Actualizar el stock si la cotización fue aceptada
+    if data['cotizacion']['status'] == 'aceptada':
+        for item in data['detalles']:
+            producto = get_object_or_404(Inventario, id_producto=item['id_producto'])
+            producto.stock_actual -= item['cantidad']
+            producto.save()
+
+    for item in data['detalles']:
+        nuevos_detalles = DetalleCotizaciones.objects.filter(id_coti=data['cotizacion']['id_coti'])
+
+        for detalle in nuevos_detalles:
+            detalle.descripcion = item['descripcion']
+            detalle.unidad_medida = item['unidad_medida']
+            detalle.cantidad = item['cantidad']
+            detalle.precio_unitario = item['precio_unitario']
+            detalle.total = item['cantidad'] * item['precio_unitario']
+
+            detalle.save()
+        
+
+    return JsonResponse('actualizado completo', safe=False)
