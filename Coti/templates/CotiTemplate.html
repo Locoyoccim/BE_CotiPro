@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Cotizacion</title>
+        {% load static %}
+    </head>
+    <body>
+        <div class="header">
+            <div class="log_container">
+                <img src="{% static 'static/pdf/Logo_360.png' %}" alt="logos" />
+            </div>
+            <div class="general_information">
+                <div class="titulo_cot">Cotizacion</div>
+                <table class="table_information">
+                    <tbody>
+                        <tr>
+                            <th>Fecha</th>
+                            <td>29 octubre 24</td>
+                        </tr>
+                        <tr>
+                            <th>No. Cotizacion</th>
+                            <td>CT-10-08</td>
+                        </tr>
+                        <tr>
+                            <th>Agente</th>
+                            <td>Gilberto Arrellano</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <table class="client_info">
+            <tbody>
+                <tr>
+                    <th>Cliente</th>
+                    <td>Casa Salles</td>
+                </tr>
+                <tr>
+                    <th>Contacto</th>
+                    <td>Ana</td>
+                </tr>
+                <tr>
+                    <th>Telefono</th>
+                    <td>374107758</td>
+                </tr>
+                <tr>
+                    <th>Domicilio</th>
+                    <td>C. La villa 3</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="cotizacion">
+            <thead>
+                <tr>
+                    <th>Partida</th>
+                    <th class="product_description">Descripcion</th>
+                    <th>
+                        U. de <br />
+                        Medida
+                    </th>
+                    <th>Cantidad</th>
+                    <th>
+                        Precio <br />
+                        Unitario
+                    </th>
+                    <th>Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in productos %}
+                <tr>
+                    <td>{{ item.partida }}</td>
+                    <td>{{ item.descripcion }}</td>
+                    <td>{{ item.unidad_medida }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ item.precio_unitario }}</td>
+                    <td>{{ item.importe }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <section class="closer">
+            <div class="details">
+                <table>
+                    <thead>
+                        <th>Comentarios</th>
+                    </thead>
+                    <tbody>
+                        <td>{{comentario}}</td>
+                    </tbody>
+                </table>
+                <table class="condiciones">
+                    <div class="entrega_tittle">
+                        <strong>Entregas</strong>
+                    </div>
+                    <tbody>
+                        <tr>
+                            <th>Tiempo</th>
+                            <td>10 días hábiles</td>
+                        </tr>
+                        <tr>
+                            <th>Lugar</th>
+                            <td>En las instalaciones de la empresa</td>
+                        </tr>
+                        <tr>
+                            <th>Costo de envió</th>
+                            <td>Incluido</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="total">
+                <table>
+                    <tr>
+                        <th>Sub-Total:</th>
+                        <td>${{sub_total}}</td>
+                    </tr>
+                    <tr>
+                        <th>IVA 16%:</th>
+                        <td>${{iva}}</td>
+                    </tr>
+                    <tr>
+                        <th>Descuento:</th>
+                        <td>${{descuento}}</td>
+                    </tr>
+                    <tr class="color_total">
+                        <th>Total:</th>
+                        <td>${{total}}</td>
+                    </tr>
+                    <tr class="condiciones_pago">
+                        <th>Condiciones de Pago:</th>
+                        <td>Contado</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+        <footer>
+            <table class="observaciones">
+                <thead>
+                    <tr>
+                        <th>Observaciones, Términos y Condiciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <td>
+                        LA PRESENTE COTIZACIÓN ESTÁ SUJETA A CAMBIOS SIN PREVIO
+                        AVISO EN CASO DE QUE LA PARIDAD CAMBIARÍA DEL PESO (MXN)
+                        FRENTE AL DÓLAR AMERICANO (USD) Y ESTE TENGA UN
+                        INCREMENTO IGUAL O MAYOR A 1% ENTRE UN DÍA Y OTRO, ESTO
+                        PERMITE A PREVENCIÓN 360, INDUSTRIAL, ACTUALIZAR LOS
+                        PRECIOS DE LOS PRODUCTOS AQUÍ COTIZADOS. PROVEEDOR
+                    </td>
+                </tbody>
+            </table>
+            <table class="medio_pago">
+                <thead>
+                    <tr>
+                        <th>Cuenta destino de pagos</th>
+                    </tr>
+                </thead>
+                <tbody >
+                    <tr>
+                        <td>
+                            CARLOS ANTONIO HERNANDEZ ROBLES <br />
+                            <strong>RFC:</strong> HERC960726IH1 <br />
+                            <strong>Tel.</strong> 374-104-3449
+                            <strong>/ Email:</strong> 360prevencion@gmail.com
+                            <br />
+                            <br />
+                            <strong>Banco Destino:</strong> BBVA<br />
+                            <strong>Cuenta:</strong> 1500213840 <br />
+                            <strong>Clabe:</strong> 012 180 01500213840 4
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </footer>
+    </body>
+</html>

@@ -1,9 +1,82 @@
 import json
+from django.conf import settings
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Productos, Cotizaciones, DetalleCotizaciones, Usuarios, Inventario
+import weasyprint
+from django.template.loader import render_to_string
+import os
+
+# views.py
+import os
+from django.conf import settings
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+import weasyprint
+
+def pdf_generator(request):
+    # Datos de ejemplo para la cotización
+    cotizacion = [
+        {
+            "partida": 1, 
+        "descripcion": "sirve para hacer todo",
+        "unidad_medida": "pieza",
+        "cantidad": 2,
+        "precio_unitario": 20,
+        "importe": 1200
+        },
+        {
+        "partida": 1, 
+        "descripcion": "sirve para hacer todo",
+        "unidad_medida": "pieza",
+        "cantidad": 2,
+        "precio_unitario": 20,
+        "importe": 1200
+        },
+        {
+        "partida": 1, 
+        "descripcion": "sirve para hacer todo",
+        "unidad_medida": "pieza",
+        "cantidad": 2,
+        "precio_unitario": 20,
+        "importe": 1200
+        },
+ 
+    ]
+    comentario = 'Este es un comentario'
+    sub_total = 250
+    iva = 50
+    descuento = 25
+    total = 275
+
+    # Generar la URL completa para el archivo CSS
+    css_path = os.path.join(settings.STATIC_ROOT, 'pdf/styleTemplate.css')
+
+    # Crear la URL completa para el logo
+    logo_url = request.build_absolute_uri("/static/pdf/Logo_360.png")  # Cambia según la ruta real de tu imagen en /static
+
+    # Rendering el HTML con contexto de datos
+    html_string = render_to_string(
+        'CotiTemplate.html', {
+            'productos': cotizacion,
+            'comentario': comentario,
+            'sub_total': sub_total,
+            'iva': iva,
+            'descuento': descuento,
+            'total': total,
+        }
+    )
+
+    # Generar el archivo PDF
+    pdf_file = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf(stylesheets=[weasyprint.CSS(css_path)])
+
+    # Crear la respuesta HTTP para descargar el PDF
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="cotizacion.pdf"'
+    
+    return response
 
 # Create your views here.
 @csrf_exempt
@@ -30,7 +103,7 @@ def lista_productos(request, pk):
         return Crear_producto(request, pk)
     elif request.method == 'DELETE':
         return Eliminar_producto(request)
-    elif request.method == 'PUT':
+    elif request.method == 'PUT':   
         return Actualizar_producto(request)
     else:
         return HttpResponse("Metodo Invalido", status=405)
@@ -127,7 +200,7 @@ def delete_usuario(request, pk):
     name_user = usuario.nombre
     usuario.delete()
 
-    return JsonResponse(f'usuario {name_user} eliminado con exito', safe=False, status=200)
+    return JsonResponse(f'usuario {name_user} eliminado con éxito', safe=False, status=200)
 
 # FUNCIONES PARA PRODUCTOS
 def Obtener_Productos(request, pk):
