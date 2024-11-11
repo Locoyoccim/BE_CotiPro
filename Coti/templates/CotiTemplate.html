@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Cotizacion</title>
+        <title>CT-{{mes}}-{{NoCoti}}</title>
         {% load static %}
     </head>
     <body>
@@ -17,11 +17,11 @@
                     <tbody>
                         <tr>
                             <th>Fecha</th>
-                            <td>29 octubre 24</td>
+                            <td>{{fecha}}</td>
                         </tr>
                         <tr>
                             <th>No. Cotizacion</th>
-                            <td>CT-10-08</td>
+                            <td>CT-{{mes}}-{{NoCoti}}</td>
                         </tr>
                         <tr>
                             <th>Agente</th>
@@ -35,19 +35,19 @@
             <tbody>
                 <tr>
                     <th>Cliente</th>
-                    <td>Casa Salles</td>
+                    <td>{{cliente}}</td>
                 </tr>
                 <tr>
                     <th>Contacto</th>
-                    <td>Ana</td>
+                    <td>{{contacto}}</td>
                 </tr>
                 <tr>
                     <th>Telefono</th>
-                    <td>374107758</td>
+                    <td>{{telefono}}</td>
                 </tr>
                 <tr>
                     <th>Domicilio</th>
-                    <td>C. La villa 3</td>
+                    <td>{{domicilio}}</td>
                 </tr>
             </tbody>
         </table>
@@ -168,7 +168,6 @@
                             <strong>RFC:</strong> HERC960726IH1 <br />
                             <strong>Tel.</strong> 374-104-3449
                             <strong>/ Email:</strong> 360prevencion@gmail.com
-                            <br />
                             <br />
                             <strong>Banco Destino:</strong> BBVA<br />
                             <strong>Cuenta:</strong> 1500213840 <br />

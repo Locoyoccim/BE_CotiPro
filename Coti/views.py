@@ -8,64 +8,74 @@ from .models import Productos, Cotizaciones, DetalleCotizaciones, Usuarios, Inve
 import weasyprint
 from django.template.loader import render_to_string
 import os
+from datetime import datetime
 
 # views.py
-import os
-from django.conf import settings
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-import weasyprint
-
-def pdf_generator(request):
+def pdf_generator(request, pk, CotiId):
     # Datos de ejemplo para la cotización
-    cotizacion = [
-        {
-            "partida": 1, 
-        "descripcion": "sirve para hacer todo",
-        "unidad_medida": "pieza",
-        "cantidad": 2,
-        "precio_unitario": 20,
-        "importe": 1200
-        },
-        {
-        "partida": 1, 
-        "descripcion": "sirve para hacer todo",
-        "unidad_medida": "pieza",
-        "cantidad": 2,
-        "precio_unitario": 20,
-        "importe": 1200
-        },
-        {
-        "partida": 1, 
-        "descripcion": "sirve para hacer todo",
-        "unidad_medida": "pieza",
-        "cantidad": 2,
-        "precio_unitario": 20,
-        "importe": 1200
-        },
- 
-    ]
-    comentario = 'Este es un comentario'
-    sub_total = 250
-    iva = 50
-    descuento = 25
-    total = 275
+    UserCotizacion = Cotizaciones.objects.filter(id_user=pk)
+    Cotizacion = UserCotizacion.get(id_coti=CotiId)
+    DetalleCotizacion = DetalleCotizaciones.objects.filter(id_coti=CotiId)
+
+    #extraer el mes de la fecha para el titulo de la cotizacion
+    def extraer_mes(fecha, formato="numero"):
+        # Convertir la fecha de cadena a objeto datetime
+        fecha = datetime.strptime(str(fecha), "%Y-%m-%d")
+        
+        # Obtener el mes en número o en nombre según el formato solicitado
+        if formato == "nombre":
+            return fecha.strftime("%B")  # Mes como nombre completo, por ejemplo, "October"
+        elif formato == "nombre_corto":
+            return fecha.strftime("%b")  # Mes como nombre abreviado, por ejemplo, "Oct"
+        else:
+            return fecha.month  # Mes como número, por ejemplo, 10
+
+    comentario = Cotizacion.comentarios
+    sub_total = Cotizacion.sub_total
+    iva = Cotizacion.iva
+    descuento = 0
+    total = Cotizacion.total
+    cliente= Cotizacion.cliente
+    contacto= Cotizacion.contacto
+    telefono= Cotizacion.telefono
+    domicilio= Cotizacion.domicilio
+    fecha= Cotizacion.fecha_elaboracion
+    mes= extraer_mes(Cotizacion.fecha_elaboracion)
+    NoCoti=CotiId
+
+    Coti_response = []
+    for item in DetalleCotizacion:
+        Coti_response.append({
+            'partida': item.id_detalle,
+            'descripcion': item.descripcion,
+            'unidad_medida': item.unidad_medida,
+            'cantidad': item.cantidad,
+            'precio_unitario': item.precio_unitario,
+            'importe': item.total
+            })
 
     # Generar la URL completa para el archivo CSS
     css_path = os.path.join(settings.STATIC_ROOT, 'pdf/styleTemplate.css')
 
     # Crear la URL completa para el logo
-    logo_url = request.build_absolute_uri("/static/pdf/Logo_360.png")  # Cambia según la ruta real de tu imagen en /static
+    logo_url = request.build_absolute_uri("static/pdf/Logo_360.png")  # Cambia según la ruta real de tu imagen en /static
 
     # Rendering el HTML con contexto de datos
     html_string = render_to_string(
         'CotiTemplate.html', {
-            'productos': cotizacion,
+            'productos': Coti_response,
             'comentario': comentario,
             'sub_total': sub_total,
             'iva': iva,
             'descuento': descuento,
             'total': total,
+            'cliente': cliente,
+            'contacto': contacto,
+            'telefono': telefono,
+            'domicilio': domicilio,
+            'fecha': fecha,
+            'NoCoti': NoCoti,
+            'mes': mes
         }
     )
 

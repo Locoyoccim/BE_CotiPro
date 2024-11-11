@@ -8,5 +8,5 @@ urlpatterns = [
     path('inventario_list/<int:UserPk>/', views.Inventario_list),
     path('detalle_cotizaciones/<int:CotiId>/', views.detalle_cotizaciones),
     path('cotizaciones/<int:pk>/', views.lista_cotizaciones),
-    path('pdf/', views.pdf_generator)
+    path('pdf/<int:pk>/<int:CotiId>/', views.pdf_generator)
 ]
